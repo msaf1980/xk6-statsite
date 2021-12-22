@@ -36,7 +36,7 @@ type config struct {
 	BufferSize   null.Int           `json:"bufferSize,omitempty" envconfig:"K6_STATSITE_BUFFER_SIZE"`
 	Namespace    null.String        `json:"namespace,omitempty" envconfig:"K6_STATSITE_NAMESPACE"`
 	PushInterval types.NullDuration `json:"pushInterval,omitempty" envconfig:"K6_STATSITE_PUSH_INTERVAL"`
-	TagAppend    []string           `json:"tagAppend,omitempty" envconfig:"K6_STATSD_TAG_APPEND"`
+	TagAppend    []string           `json:"tagAppend,omitempty" envconfig:"K6_STATSITE_TAG_APPEND"`
 }
 
 // Apply saves config non-zero config values from the passed config in the receiver.
