@@ -28,8 +28,8 @@ import (
 	"github.com/DataDog/datadog-go/statsd"
 	"github.com/sirupsen/logrus"
 
+	"go.k6.io/k6/metrics"
 	"go.k6.io/k6/output"
-	"go.k6.io/k6/stats"
 )
 
 // New creates a new statsd connector client
@@ -64,7 +64,7 @@ type Output struct {
 	client *statsd.Client
 }
 
-func (o *Output) dispatch(entry stats.Sample) error {
+func (o *Output) dispatch(entry metrics.Sample) error {
 	metricName := entry.Metric.Name
 	if len(o.config.TagAppend) > 0 && !entry.Tags.IsEmpty() {
 		var sb strings.Builder
@@ -80,13 +80,13 @@ func (o *Output) dispatch(entry stats.Sample) error {
 	}
 
 	switch entry.Metric.Type {
-	case stats.Counter:
+	case metrics.Counter:
 		return o.client.Count(metricName, int64(entry.Value), nil, 1)
-	case stats.Trend:
+	case metrics.Trend:
 		return o.client.TimeInMilliseconds(metricName, entry.Value, nil, 1)
-	case stats.Gauge:
+	case metrics.Gauge:
 		return o.client.Gauge(metricName, entry.Value, nil, 1)
-	case stats.Rate:
+	case metrics.Rate:
 		if check, ok := entry.Tags.Get("check"); ok {
 			return o.client.Count(
 				checkToString(check, entry.Value),

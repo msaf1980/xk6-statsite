@@ -31,7 +31,7 @@ import (
 
 	"go.k6.io/k6/lib/testutils"
 	"go.k6.io/k6/lib/types"
-	"go.k6.io/k6/stats"
+	"go.k6.io/k6/metrics"
 )
 
 type getOutputFn func(
@@ -44,7 +44,7 @@ type getOutputFn func(
 //nolint:funlen
 func baseTest(t *testing.T,
 	getOutput getOutputFn,
-	checkResult func(t *testing.T, samples []stats.SampleContainer, expectedOutput, output string),
+	checkResult func(t *testing.T, samples []metrics.SampleContainer, expectedOutput, output string),
 ) {
 	t.Helper()
 	testNamespace := "testing.things." // to be dynamic
@@ -85,24 +85,30 @@ func baseTest(t *testing.T,
 	defer func() {
 		require.NoError(t, collector.Stop())
 	}()
-	newSample := func(m *stats.Metric, value float64, tags map[string]string) stats.Sample {
-		return stats.Sample{
+	newSample := func(m *metrics.Metric, value float64, tags map[string]string) metrics.Sample {
+		return metrics.Sample{
 			Time:   time.Now(),
-			Metric: m, Value: value, Tags: stats.IntoSampleTags(&tags),
+			Metric: m, Value: value, Tags: metrics.IntoSampleTags(&tags),
 		}
 	}
 
-	myCounter := stats.New("my_counter", stats.Counter)
-	myGauge := stats.New("my_gauge", stats.Gauge)
-	myTrend := stats.New("my_trend", stats.Trend)
-	myRate := stats.New("my_rate", stats.Rate)
-	myCheck := stats.New("my_check", stats.Rate)
+	registry := metrics.NewRegistry()
+	myCounter, err := registry.NewMetric("my_counter", metrics.Counter)
+	require.NoError(t, err)
+	myGauge, err := registry.NewMetric("my_gauge", metrics.Gauge)
+	require.NoError(t, err)
+	myTrend, err := registry.NewMetric("my_trend", metrics.Trend)
+	require.NoError(t, err)
+	myRate, err := registry.NewMetric("my_rate", metrics.Rate)
+	require.NoError(t, err)
+	myCheck, err := registry.NewMetric("my_check", metrics.Rate)
+	require.NoError(t, err)
 	testMatrix := []struct {
-		input  []stats.SampleContainer
+		input  []metrics.SampleContainer
 		output string
 	}{
 		{
-			input: []stats.SampleContainer{
+			input: []metrics.SampleContainer{
 				newSample(myCounter, 12, map[string]string{
 					"tag1": "value1",
 					"tag3": "value3",
@@ -111,7 +117,7 @@ func baseTest(t *testing.T,
 			output: "testing.things.my_counter:12|c",
 		},
 		{
-			input: []stats.SampleContainer{
+			input: []metrics.SampleContainer{
 				newSample(myGauge, 13, map[string]string{
 					"tag1": "value1",
 					"tag3": "value3",
@@ -120,7 +126,7 @@ func baseTest(t *testing.T,
 			output: "testing.things.my_gauge:13|g",
 		},
 		{
-			input: []stats.SampleContainer{
+			input: []metrics.SampleContainer{
 				newSample(myTrend, 14, map[string]string{
 					"tag1": "value1",
 					"tag3": "value3",
@@ -129,7 +135,7 @@ func baseTest(t *testing.T,
 			output: "testing.things.my_trend:14.000000|ms",
 		},
 		{
-			input: []stats.SampleContainer{
+			input: []metrics.SampleContainer{
 				newSample(myRate, 15, map[string]string{
 					"tag1": "value1",
 					"tag3": "value3",
@@ -138,7 +144,7 @@ func baseTest(t *testing.T,
 			output: "testing.things.my_rate:15|c",
 		},
 		{
-			input: []stats.SampleContainer{
+			input: []metrics.SampleContainer{
 				newSample(myCheck, 16, map[string]string{
 					"tag1":  "value1",
 					"tag3":  "value3",
@@ -148,7 +154,7 @@ func baseTest(t *testing.T,
 			output: "testing.things.check.max<100.pass:1|c",
 		},
 		{
-			input: []stats.SampleContainer{
+			input: []metrics.SampleContainer{
 				newSample(myCheck, 0, map[string]string{
 					"tag1":  "value1",
 					"tag3":  "value3",
@@ -173,7 +179,7 @@ func baseTest(t *testing.T,
 func appendTest(t *testing.T,
 	appended string,
 	getOutput getOutputFn,
-	checkResult func(t *testing.T, samples []stats.SampleContainer, expectedOutput, output string),
+	checkResult func(t *testing.T, samples []metrics.SampleContainer, expectedOutput, output string),
 ) {
 	t.Helper()
 	testNamespace := "testing.things." // to be dynamic
@@ -214,25 +220,32 @@ func appendTest(t *testing.T,
 	defer func() {
 		require.NoError(t, collector.Stop())
 	}()
-	newSample := func(m *stats.Metric, value float64, tags map[string]string) stats.Sample {
-		return stats.Sample{
+	newSample := func(m *metrics.Metric, value float64, tags map[string]string) metrics.Sample {
+		return metrics.Sample{
 			Time:   time.Now(),
-			Metric: m, Value: value, Tags: stats.IntoSampleTags(&tags),
+			Metric: m, Value: value, Tags: metrics.IntoSampleTags(&tags),
 		}
 	}
 
-	myCounter := stats.New("my_counter", stats.Counter)
-	myGauge := stats.New("my_gauge", stats.Gauge)
-	myTrend := stats.New("my_trend", stats.Trend)
-	myRate := stats.New("my_rate", stats.Rate)
-	myCheck := stats.New("my_check", stats.Rate)
-	myNotag := stats.New("my_notag", stats.Counter)
+	registry := metrics.NewRegistry()
+	myCounter, err := registry.NewMetric("my_counter", metrics.Counter)
+	require.NoError(t, err)
+	myGauge, err := registry.NewMetric("my_gauge", metrics.Gauge)
+	require.NoError(t, err)
+	myTrend, err := registry.NewMetric("my_trend", metrics.Trend)
+	require.NoError(t, err)
+	myRate, err := registry.NewMetric("my_rate", metrics.Rate)
+	require.NoError(t, err)
+	myCheck, err := registry.NewMetric("my_check", metrics.Rate)
+	require.NoError(t, err)
+	myNotag, err := registry.NewMetric("my_notag", metrics.Counter)
+	require.NoError(t, err)
 	testMatrix := []struct {
-		input  []stats.SampleContainer
+		input  []metrics.SampleContainer
 		output string
 	}{
 		{
-			input: []stats.SampleContainer{
+			input: []metrics.SampleContainer{
 				newSample(myCounter, 12, map[string]string{
 					"tag1": "value1",
 					"tag3": "value3",
@@ -241,7 +254,7 @@ func appendTest(t *testing.T,
 			output: "testing.things.my_counter" + appended + ":12|c",
 		},
 		{
-			input: []stats.SampleContainer{
+			input: []metrics.SampleContainer{
 				newSample(myGauge, 13, map[string]string{
 					"tag1": "value1",
 					"tag3": "value3",
@@ -250,7 +263,7 @@ func appendTest(t *testing.T,
 			output: "testing.things.my_gauge" + appended + ":13|g",
 		},
 		{
-			input: []stats.SampleContainer{
+			input: []metrics.SampleContainer{
 				newSample(myTrend, 14, map[string]string{
 					"tag1": "value1",
 					"tag3": "value3",
@@ -259,7 +272,7 @@ func appendTest(t *testing.T,
 			output: "testing.things.my_trend" + appended + ":14.000000|ms",
 		},
 		{
-			input: []stats.SampleContainer{
+			input: []metrics.SampleContainer{
 				newSample(myRate, 15, map[string]string{
 					"tag1": "value1",
 					"tag3": "value3",
@@ -268,7 +281,7 @@ func appendTest(t *testing.T,
 			output: "testing.things.my_rate" + appended + ":15|c",
 		},
 		{
-			input: []stats.SampleContainer{
+			input: []metrics.SampleContainer{
 				newSample(myCheck, 16, map[string]string{
 					"tag1":  "value1",
 					"tag3":  "value3",
@@ -278,7 +291,7 @@ func appendTest(t *testing.T,
 			output: "testing.things.check.max<100.pass:1|c",
 		},
 		{
-			input: []stats.SampleContainer{
+			input: []metrics.SampleContainer{
 				newSample(myCheck, 0, map[string]string{
 					"tag1":  "value1",
 					"tag3":  "value3",
@@ -288,7 +301,7 @@ func appendTest(t *testing.T,
 			output: "testing.things.check.max>100.fail:1|c",
 		},
 		{
-			input: []stats.SampleContainer{
+			input: []metrics.SampleContainer{
 				newSample(myNotag, 1, nil),
 			},
 			output: "testing.things.my_notag:1|c",
