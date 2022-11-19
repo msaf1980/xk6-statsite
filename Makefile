@@ -1,4 +1,4 @@
-K6_VERSION="v0.39.0"
+K6_VERSION="v0.41.0"
 
 MAKEFLAGS += --silent
 
