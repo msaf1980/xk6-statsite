@@ -1,3 +1,3 @@
 # xk6-statsite
 
-Required k6 v0.39.0
+Required k6 v0.41.0
